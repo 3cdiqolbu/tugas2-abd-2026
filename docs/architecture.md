@@ -2,15 +2,17 @@
 
 **Mata Kuliah:** Analisis Big Data  
 **Target Check-in:** Pertemuan 10 (Diumumkan Pertemuan 8, repositori dibagikan Pertemuan 9)  
-**Nama Tim:** [Tuliskan Nama Tim]  
-**Topik / Judul Produk Data:** [Contoh: Dashboard Pemantauan Cuaca Ekstrem dan Kualitas Udara Indonesia]  
+**Nama Tim:** Wind City  
+**Topik / Judul Produk Data:** Chicago Crime Intelligence Dashboard: Analisis Spasio-Temporal & Evaluasi Efektivitas Penindakan Kriminalitas (2001–2024)  
 
 ---
 
 ## 1. Problem Statement & Sasaran Pengguna (The Pitch)
 
 ### 1.1 Latar Belakang Masalah
-*Jelaskan permasalahan nyata atau kebutuhan analisis yang ingin diselesaikan melalui dashboard analitik ini. Mengapa data besar ini perlu disajikan secara interaktif?*
+*Kota Chicago mencatat lebih dari **8,1 juta laporan insiden kriminal** sepanjang periode Januari 2001 hingga Juli 2024 (~1,83 GB data mentah). Berdasarkan hasil *profiling* awal, terdapat kesenjangan serius antara volume kejahatan dan tingkat penangkapan (*arrest rate*): jenis kejahatan dengan volume tertinggi seperti **Theft** (1,71 juta kasus), **Criminal Damage** (923 ribu kasus), **Burglary** (433 ribu kasus), dan **Motor Vehicle Theft** (406 ribu kasus) memiliki tingkat penangkapan di bawah **11%**, sangat kontras dengan kasus **Narcotics** (754 ribu kasus) yang mencapai **99,35%**.
+
+Di sisi teknis, data sebesar ini mustahil diolah secara interaktif menggunakan *spreadsheet* konvensional (yang terbatas ~1 juta baris), serta mengandung permasalahan kualitas data—termasuk **89.642 baris (1,11%) tanpa koordinat spasial** dan anomali *outlier* koordinat di luar batas geografis Kota Chicago (seperti lintang `36.61°` dan bujur `-91.68°`). Oleh karena itu, dibutuhkan produk data (*dashboard* analitik) yang cepat, bersih, dan teruji agar pemangku kepentingan dapat menelusuri pola jam rawan, pergeseran tren tahunan, serta titik *hotspot* secara *real-time* tanpa hambatan memori*
 
 ### 1.2 Target Pengguna (Target Audience)
 *Siapa pengguna utama produk data ini? (Misal: analis meteorologi BMKG, pemangku kebijakan bencana daerah, pelaku logistik maritim, atau masyarakat umum).*
