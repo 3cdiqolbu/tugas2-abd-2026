@@ -4,6 +4,6 @@ Nama Kelompok: [Nama Kelompok]
 
 | No | Nama Lengkap | NIM | Akun GitHub |
 |:--:|--------------|-----|-------------|
-| 1 | Tricahyo Diqolbu | 202310370311309 | 3cdiqolbu |
-| 2 | M. Rayhan Shaffarukhan Alkamaly | 202310370311346 | @username2 |
-| 3 | NamaDepan NamaBelakang | 200510370311000 | @username3 |
+| 1 | Tricahyo Diqolbu | 202310370311309 | @3cdiqolbu |
+| 2 | M. Rayhan Shaffarukhan Alkamaly | 202310370311346 | @rayhanalkamaly |
+
