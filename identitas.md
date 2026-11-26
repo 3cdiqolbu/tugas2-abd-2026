@@ -1,6 +1,6 @@
 # Identitas Kelompok
 
-Nama Kelompok: [Nama Kelompok]
+Nama Kelompok: Wind City
 
 | No | Nama Lengkap | NIM | Akun GitHub |
 |:--:|--------------|-----|-------------|
