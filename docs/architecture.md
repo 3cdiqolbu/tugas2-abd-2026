@@ -12,7 +12,7 @@
 ### 1.1 Latar Belakang Masalah
 Kota Chicago mencatat lebih dari **8,1 juta laporan insiden kriminal** sepanjang periode Januari 2001 hingga Juli 2024 (~1,83 GB data mentah). Berdasarkan hasil *profiling* awal, terdapat kesenjangan serius antara volume kejahatan dan tingkat penangkapan (*arrest rate*): jenis kejahatan dengan volume tertinggi seperti **Theft** (1,71 juta kasus), **Criminal Damage** (923 ribu kasus), **Burglary** (433 ribu kasus), dan **Motor Vehicle Theft** (406 ribu kasus) memiliki tingkat penangkapan di bawah **11%**, sangat kontras dengan kasus **Narcotics** (754 ribu kasus) yang mencapai **99,35%**.
 
-Di sisi teknis, data sebesar ini mustahil diolah secara interaktif menggunakan *spreadsheet* konvensional (yang terbatas ~1 juta baris), serta mengandung permasalahan kualitas data—termasuk **89.642 baris (1,11%) tanpa koordinat spasial** dan anomali *outlier* koordinat di luar batas geografis Kota Chicago (seperti lintang `36.61°` dan bujur `-91.68°`). Oleh karena itu, dibutuhkan produk data (*dashboard* analitik) yang cepat, bersih, dan teruji agar pemangku kepentingan dapat menelusuri pola jam rawan, pergeseran tren tahunan, serta titik *hotspot* secara *real-time* tanpa hambatan memori
+Di sisi teknis, data sebesar ini mustahil diolah secara interaktif menggunakan *spreadsheet* konvensional (yang terbatas ~1 juta baris), serta mengandung permasalahan kualitas data—termasuk **89.642 baris (1,11%) tanpa koordinat spasial** dan anomali *outlier* koordinat di luar batas geografis Kota Chicago (seperti lintang `36.61°` dan bujur `-91.68°`). Oleh karena itu, dibutuhkan produk data (*dashboard* analitik) yang cepat, bersih, dan teruji agar pemangku kepentingan dapat menelusuri pola jam rawan, pergeseran tren tahunan, serta titik *hotspot* secara interaktif tanpa hambatan memori.
 
 ### 1.2 Target Pengguna (Target Audience)
 1. **Analis Operasional & Komandan Distrik Kepolisian (Chicago Police Department / CPD):** Membutuhkan pemetaan *hotspot* spasial dan jam rawan per distrik (`District` & `Beat`) untuk mengoptimalkan penjadwalan patroli preventif.
@@ -71,7 +71,7 @@ flowchart TD
   * Agregasi spasial berbasis *grid binning* (`ROUND(latitude, 3)`, `ROUND(longitude, 3)`) untuk menghasilkan peta kepadatan (*hotspot*) yang akurat tanpa mengirim jutaan titik koordinat ke browser.
 
 ### 4.2 Peran Polars (Transformasi Data)
-* **Tahap *Offline* ETL (`src/utils.py`):** Menggunakan *Lazy Evaluation* (`pl.scan_csv` → `sink_parquet`) agar pemrosesan 1,83 GB berjalan *streaming* tanpa *Out-of-Memory* (OOM). Transformasi meliputi standarisasi nama kolom ke `snake_case`, parsing `datetime`, penghapusan 89.642 baris *null* koordinat/waktu, penyaringan *bounding box* geografis Chicago (`Latitude` 41.60–42.05; `Longitude` -87.95 s.d. -87.50), deduplikasi kunci `id`, pembuangan kolom redundan (`location`, `x_coordinate`, `y_coordinate`, `updated_on`), serta *downcasting* tipe numerik (`Float64` → `Float32`, `Int64` → `Int16`) untuk menghemat ~50% RAM.
+* **Tahap *Offline* ETL (`src/utils.py`):** Menggunakan *Lazy Evaluation* (`pl.scan_csv` → `sink_parquet`) agar pemrosesan 1,83 GB berjalan *streaming* tanpa *Out-of-Memory* (OOM). Transformasi meliputi standarisasi nama kolom ke `snake_case`, parsing `datetime`, penghapusan 89.642 baris *null* koordinat/waktu, penyaringan *bounding box* geografis Chicago (`Latitude` 41.60–42.05; `Longitude` -87.95 s.d. -87.50), deduplikasi kunci `id`, pembuangan kolom redundan (`location`, `x_coordinate`, `y_coordinate`, `updated_on`), serta *downcasting* tipe numerik (`Float64` → `Float32` untuk koordinat; `Int64` → `Int16` untuk `year`, `district`, `beat`, `ward`, `community_area`; kolom `id` tetap `Int64`) untuk menghemat memori.
 * **Tahap Transformasi Analitik Ringkas:** Menerima hasil agregasi dari DuckDB untuk operasi temporal lanjutan seperti *downsampling* (`group_by_dynamic`), perhitungan rata-rata bergerak (*moving average* 12 bulan via `rolling_mean`), ekstraksi fitur kalender (`hari`, `jam`, `is_weekend`), serta penyusunan tabel pivot untuk *heatmap* jam rawan.
 
 ### 4.3 Strategi Optimasi Memori & Caching Streamlit
@@ -107,8 +107,10 @@ Lingkungan Hugging Face Spaces gratis memiliki keterbatasan sumber daya komputas
 
 ## 6. Pembagian Tugas & Tanggung Jawab Anggota Tim
 
-| Anggota Tim | Tanggung Jawab Utama di Phase 1 - 4 |
-|-------------|-------------------------------------|
-| Mahasiswa 1 | Desain arsitektur, data pipeline, dan integrasi Dockerfile |
-| Mahasiswa 2 | Penyusunan kueri analitik DuckDB dan optimasi partisi Parquet |
-| Mahasiswa 3 | Desain antarmuka Streamlit, visualisasi Plotly, dan deployment ke HF Spaces |
+*(Seluruh anggota berkontribusi melalui branch masing-masing dan Pull Request dengan code review silang, sehingga kontribusi individu tercatat jelas di riwayat commit dan lolos `lint_check.yml` di GitHub Actions).*
+
+| Anggota Tim | Peran & Tanggung Jawab Utama di Phase 1 – 4 |
+|-------------|---------------------------------------------|
+| **Tricahyo Diqolbu** | **Data Engineer & DevOps Lead:** Penyusunan `docs/architecture.md` & `data/README.md`, pipeline ETL Polars *lazy* (`src/utils.py`), pembuatan partisi Hive Parquet ke Hugging Face Datasets, `requirements.txt`, `Dockerfile`, pemeliharaan `lint_check.yml`, serta *staging* & *production deployment* di Hugging Face Spaces. Pada tahap akhir mengerjakan Tab 3 (peta spasial) dan Tab 4 (tabel & ekspor CSV). |
+| **M. Rayhan Shaffarukhan Alkamaly** | **Analytics, Query & UI Engineer:** Perancangan seluruh kueri DuckDB di `src/queries.py` (*partition pruning*, *window functions*, *spatial binning*), optimasi `@st.cache_data`, pengembangan antarmuka Streamlit (`app.py`) beserta filter sidebar dan grafik Plotly Tab 1–2, serta produksi video demo. |
+| **Bersama** | Penyelesaian `README.md` final, AI Disclosure Statement, dan persiapan presentasi. |
