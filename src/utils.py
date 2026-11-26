@@ -1,7 +1,11 @@
 import argparse
+import os
 from pathlib import Path
 
 import polars as pl
+from huggingface_hub import snapshot_download
+
+DEFAULT_HF_REPO = os.getenv("HF_DATASET_REPO", "3cdiqolbu/chicago-crime-clean")
 
 OUTPUT_COLUMNS = [
     "id",
@@ -104,9 +108,9 @@ def run_etl(
         lf_tmp = pl.scan_parquet(temp_parquet)
 
         clean_rows = lf_tmp.select(pl.len()).collect().item()
-        print(f"Total baris mentah  : {raw_rows:,}")
+        print(f"Total baris mentah   : {raw_rows:,}")
         print(f"Baris tanpa koordinat: {null_coords:,}")
-        print(f"Total baris bersih  : {clean_rows:,}")
+        print(f"Total baris bersih   : {clean_rows:,}")
 
         if only_year is not None:
             years = [only_year]
@@ -138,9 +142,39 @@ def run_etl(
             temp_parquet.unlink()
 
 
+def ensure_dataset(
+    output_dir: Path = Path("data/processed/chicago_crimes"),
+    repo_id: str = DEFAULT_HF_REPO,
+) -> Path:
+    existing = list(output_dir.glob("year=*/data.parquet"))
+    if existing:
+        print(f"Dataset lokal siap ({len(existing)} partisi) di {output_dir}")
+        return output_dir
+
+    output_dir.parent.mkdir(parents=True, exist_ok=True)
+    snapshot_download(
+        repo_id=repo_id,
+        repo_type="dataset",
+        allow_patterns="chicago_crimes/year=*/data.parquet",
+        local_dir=output_dir.parent,
+    )
+    downloaded = list(output_dir.glob("year=*/data.parquet"))
+    print(f"Dataset diunduh ({len(downloaded)} partisi) ke {output_dir}")
+    return output_dir
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="ETL Chicago Crime CSV ke Hive-partitioned Parquet."
+        description="ETL dan pengunduhan dataset Chicago Crime."
+    )
+    parser.add_argument(
+        "--download-hf",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--repo-id",
+        type=str,
+        default=DEFAULT_HF_REPO,
     )
     parser.add_argument(
         "--input",
@@ -162,4 +196,7 @@ def parse_args() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_args()
-    run_etl(args.input, args.output, args.year)
+    if args.download_hf:
+        ensure_dataset(args.output, args.repo_id)
+    else:
+        run_etl(args.input, args.output, args.year)
